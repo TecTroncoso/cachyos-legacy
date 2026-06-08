@@ -1,7 +1,20 @@
 name: Construir CachyOS Legacy (XFCE)
 
 on:
-  workflow_dispatch: # Activa el botón de construcción manual
+  workflow_dispatch:
+    inputs:
+      iso_name:
+        description: 'Nombre de tu ISO (sin espacios ni .iso)'
+        required: true
+        default: 'CachyOS-Legacy'
+      version_tag:
+        description: 'Versión del lanzamiento (ej. v1.0)'
+        required: true
+        default: 'v1.0'
+
+# ¡MUY IMPORTANTE! Permisos para que el robot pueda publicar en la pestaña "Releases"
+permissions:
+  contents: write
 
 jobs:
   build-iso:
@@ -14,17 +27,21 @@ jobs:
       - name: 📥 1. Descargar nuestros archivos
         uses: actions/checkout@v4
 
-      - name: 🛠️ 2. Preparar el entorno limpio de Arch Linux
+      - name: 🛠️ 2. Preparar el entorno y solucionar llaves GPG
         run: |
-          # Actualizar el sistema base y herramientas de creación de ISOs
           pacman -Syu --noconfirm
-          pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl
+          pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl wget unzip tar
           
-          # Configurar las llaves criptográficas temporalmente para bajar los paquetes de CachyOS
+          # Inicializar llaves base de Arch Linux
           pacman-key --init
-          echo "[cachyos]" >> /etc/pacman.conf
-          echo "Server = https://mirror.cachyos.org/repo/x86_64/cachyos" >> /etc/pacman.conf
-          pacman -Sy --noconfirm cachyos-keyring cachyos-mirrorlist
+          pacman-key --populate archlinux
+          
+          # Solución al error GPG: Usar el script oficial de CachyOS
+          wget https://mirror.cachyos.org/cachyos-repo.tar.xz
+          tar xvf cachyos-repo.tar.xz
+          cd cachyos-repo
+          ./cachyos-repo.sh
+          cd ..
 
       - name: 📦 3. Clonar la base de CachyOS
         run: |
@@ -34,19 +51,25 @@ jobs:
         run: |
           # Reemplazamos la configuración de CachyOS por nuestro escudo Legacy
           cp pacman-legacy.conf builder/archiso/pacman.conf
-          
-          # Reemplazamos su lista de paquetes pesada por la nuestra ligera
+          # Reemplazamos su lista de paquetes por la nuestra con XFCE y Brave
           cp packages-legacy.txt builder/archiso/packages.x86_64
 
-      - name: ⚙️ 5. Compilar la ISO (Esto tomará unos 20 minutos)
+      - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
-          # Usamos mkarchiso directamente para evitar que los scripts de CachyOS fuercen CPUs modernas
+          # Usamos mkarchiso directamente. Esto evita el error de "buildiso.sh no encontrado"
           mkarchiso -v -w work_dir -o out archiso/
+          
+          # Renombramos la ISO final usando el nombre que elegiste al iniciar
+          cd out
+          mv *.iso ../../${{ github.event.inputs.iso_name }}-${{ github.event.inputs.version_tag }}-x86_64.iso
 
-      - name: 🚀 6. Subir tu nueva ISO lista para descargar
-        uses: actions/upload-artifact@v4
+      - name: 🎉 6. Publicar automáticamente en GitHub Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: CachyOS-Legacy-XFCE-ISO
-          path: builder/out/*.iso
-          retention-days: 5 # La ISO estará disponible 5 días para que la descargues
+          tag_name: ${{ github.event.inputs.version_tag }}
+          name: "Lanzamiento ${{ github.event.inputs.iso_name }} ${{ github.event.inputs.version_tag }}"
+          body: "Esta ISO está basada en CachyOS LTS, optimizada para hardware antiguo e incluye XFCE, ZRAM por defecto y Brave Browser."
+          files: "*.iso"
+          draft: false
+          prerelease: false
