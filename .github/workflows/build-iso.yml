@@ -1,51 +1,52 @@
-name: Compilar CachyOS Legacy
+name: Construir CachyOS Legacy (XFCE)
 
-# ¿Cuándo se ejecuta esto?
 on:
-  workflow_dispatch: # Nos permite crear un botón para compilar la ISO manualmente
-  push:
-    branches: [ "main" ] # Se autocompila cada vez que subimos código a 'main'
+  workflow_dispatch: # Activa el botón de construcción manual
 
 jobs:
-  build:
-    name: Construir ISO
+  build-iso:
     runs-on: ubuntu-latest
-    
-    # Usamos Arch Linux como sistema base para la compilación
     container:
       image: archlinux:latest
-      # ¡MUY IMPORTANTE! archiso requiere permisos especiales para montar discos virtuales
-      options: --privileged 
+      options: --privileged # Vital para poder montar discos virtuales
 
     steps:
-      - name: 📥 Descargar nuestro repositorio
+      - name: 📥 1. Descargar nuestros archivos
         uses: actions/checkout@v4
 
-      - name: 🛠️ Preparar el entorno Arch Linux
+      - name: 🛠️ 2. Preparar el entorno limpio de Arch Linux
         run: |
-          # Actualizar el sistema e instalar las herramientas necesarias
+          # Actualizar el sistema base y herramientas de creación de ISOs
           pacman -Syu --noconfirm
-          pacman -S --noconfirm git archiso mkinitcpio-archiso squashfs-tools base-devel sudo zstd
+          pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl
           
-          # CachyOS requiere su propio keyring (llaves de seguridad) para los repositorios
-          # Descargamos e instalamos el keyring y los mirrorlists de CachyOS
+          # Configurar las llaves criptográficas temporalmente para bajar los paquetes de CachyOS
           pacman-key --init
-          pacman -U 'https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-20240331-1-any.pkg.tar.zst' 'https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-mirrorlist-18-1-any.pkg.tar.zst' --noconfirm || true
+          echo "[cachyos]" >> /etc/pacman.conf
+          echo "Server = https://mirror.cachyos.org/repo/x86_64/cachyos" >> /etc/pacman.conf
+          pacman -Sy --noconfirm cachyos-keyring cachyos-mirrorlist
 
-      - name: ⚙️ Compilar la ISO de CachyOS Legacy
+      - name: 📦 3. Clonar la base de CachyOS
         run: |
-          # Damos permisos de ejecución al script de CachyOS
-          chmod +x buildiso.sh
-          
-          # Ejecutamos el compilador. 
-          # Suponiendo que creamos un perfil llamado "legacy-xfce"
-          ./buildiso.sh -p legacy-xfce
-          
-          # Nota: archiso guarda las ISOs generadas en la carpeta 'out/'
+          git clone https://github.com/CachyOS/CachyOS-Live-ISO.git builder
 
-      - name: 🚀 Subir la ISO generada
+      - name: 💉 4. Inyectar nuestra configuración Legacy
+        run: |
+          # Reemplazamos la configuración de CachyOS por nuestro escudo Legacy
+          cp pacman-legacy.conf builder/archiso/pacman.conf
+          
+          # Reemplazamos su lista de paquetes pesada por la nuestra ligera
+          cp packages-legacy.txt builder/archiso/packages.x86_64
+
+      - name: ⚙️ 5. Compilar la ISO (Esto tomará unos 20 minutos)
+        run: |
+          cd builder
+          # Usamos mkarchiso directamente para evitar que los scripts de CachyOS fuercen CPUs modernas
+          mkarchiso -v -w work_dir -o out archiso/
+
+      - name: 🚀 6. Subir tu nueva ISO lista para descargar
         uses: actions/upload-artifact@v4
         with:
-          name: CachyOS-Legacy-ISO
-          path: out/*.iso
-          retention-days: 7 # GitHub guardará la ISO por 7 días para descargarla
+          name: CachyOS-Legacy-XFCE-ISO
+          path: builder/out/*.iso
+          retention-days: 5 # La ISO estará disponible 5 días para que la descargues
