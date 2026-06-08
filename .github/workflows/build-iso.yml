@@ -29,7 +29,8 @@ jobs:
       - name: 🛠️ 2. Preparar el entorno y solucionar llaves GPG
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl wget unzip tar
+          # Agregamos grub y dosfstools para que la máquina pueda crear particiones de arranque
+          pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl wget unzip tar grub dosfstools
           
           # Inicializar llaves base de Arch Linux
           pacman-key --init
@@ -40,7 +41,7 @@ jobs:
           tar xvf cachyos-repo.tar.xz
           cd cachyos-repo
           
-          # ¡AQUÍ ESTÁ LA MAGIA! Obligamos al robot a responder "Sí" a todo
+          # Obligamos al robot a responder "Sí" a todo
           yes | ./cachyos-repo.sh
           cd ..
 
