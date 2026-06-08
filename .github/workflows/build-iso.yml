@@ -1,0 +1,51 @@
+name: Compilar CachyOS Legacy
+
+# ¿Cuándo se ejecuta esto?
+on:
+  workflow_dispatch: # Nos permite crear un botón para compilar la ISO manualmente
+  push:
+    branches: [ "main" ] # Se autocompila cada vez que subimos código a 'main'
+
+jobs:
+  build:
+    name: Construir ISO
+    runs-on: ubuntu-latest
+    
+    # Usamos Arch Linux como sistema base para la compilación
+    container:
+      image: archlinux:latest
+      # ¡MUY IMPORTANTE! archiso requiere permisos especiales para montar discos virtuales
+      options: --privileged 
+
+    steps:
+      - name: 📥 Descargar nuestro repositorio
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Preparar el entorno Arch Linux
+        run: |
+          # Actualizar el sistema e instalar las herramientas necesarias
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm git archiso mkinitcpio-archiso squashfs-tools base-devel sudo zstd
+          
+          # CachyOS requiere su propio keyring (llaves de seguridad) para los repositorios
+          # Descargamos e instalamos el keyring y los mirrorlists de CachyOS
+          pacman-key --init
+          pacman -U 'https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-20240331-1-any.pkg.tar.zst' 'https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-mirrorlist-18-1-any.pkg.tar.zst' --noconfirm || true
+
+      - name: ⚙️ Compilar la ISO de CachyOS Legacy
+        run: |
+          # Damos permisos de ejecución al script de CachyOS
+          chmod +x buildiso.sh
+          
+          # Ejecutamos el compilador. 
+          # Suponiendo que creamos un perfil llamado "legacy-xfce"
+          ./buildiso.sh -p legacy-xfce
+          
+          # Nota: archiso guarda las ISOs generadas en la carpeta 'out/'
+
+      - name: 🚀 Subir la ISO generada
+        uses: actions/upload-artifact@v4
+        with:
+          name: CachyOS-Legacy-ISO
+          path: out/*.iso
+          retention-days: 7 # GitHub guardará la ISO por 7 días para descargarla
