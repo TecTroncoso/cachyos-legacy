@@ -1,0 +1,45 @@
+# --- CEREBRO Y MOTOR (Optimizados para hardware antiguo) ---
+base
+base-devel
+linux-cachyos-lts
+linux-cachyos-lts-headers
+linux-firmware
+mkinitcpio
+arch-install-scripts
+
+# --- LLAVES Y REPOSITORIOS DE CACHYOS ---
+cachyos-keyring
+cachyos-mirrorlist
+
+# --- ARRANQUE E INSTALADOR ---
+grub
+efibootmgr
+os-prober
+calamares
+
+# --- REDES Y MAGIA PARA POCA RAM ---
+networkmanager
+zram-generator
+htop
+nano
+git
+wget
+curl
+
+# --- ENTORNO GRÁFICO (XFCE - Consumo ultra bajo) ---
+xorg-server
+xorg-xinit
+lightdm
+lightdm-gtk-greeter
+xfce4
+xfce4-goodies
+gvfs
+mousepad
+xfce4-terminal
+
+# --- AUDIO, VIDEO Y NAVEGADOR ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+firefox
