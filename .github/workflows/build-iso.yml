@@ -12,7 +12,6 @@ on:
         required: true
         default: 'v1.0'
 
-# ¡MUY IMPORTANTE! Permisos para que el robot pueda publicar en la pestaña "Releases"
 permissions:
   contents: write
 
@@ -36,11 +35,13 @@ jobs:
           pacman-key --init
           pacman-key --populate archlinux
           
-          # Solución al error GPG: Usar el script oficial de CachyOS
+          # Descargar instalador de repositorios de CachyOS
           wget https://mirror.cachyos.org/cachyos-repo.tar.xz
           tar xvf cachyos-repo.tar.xz
           cd cachyos-repo
-          ./cachyos-repo.sh
+          
+          # ¡AQUÍ ESTÁ LA MAGIA! Obligamos al robot a responder "Sí" a todo
+          yes | ./cachyos-repo.sh
           cd ..
 
       - name: 📦 3. Clonar la base de CachyOS
@@ -57,10 +58,10 @@ jobs:
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
-          # Usamos mkarchiso directamente. Esto evita el error de "buildiso.sh no encontrado"
+          # Usamos mkarchiso directamente para esquivar errores
           mkarchiso -v -w work_dir -o out archiso/
           
-          # Renombramos la ISO final usando el nombre que elegiste al iniciar
+          # Renombramos la ISO final usando los datos del formulario interactivo
           cd out
           mv *.iso ../../${{ github.event.inputs.iso_name }}-${{ github.event.inputs.version_tag }}-x86_64.iso
 
