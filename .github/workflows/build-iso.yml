@@ -49,14 +49,35 @@ jobs:
         run: |
           git clone https://github.com/CachyOS/CachyOS-Live-ISO.git builder
 
-      - name: 💉 4. Inyectar nuestra configuración Legacy
+      - name: 💉 4. Inyectar Optimizaciones y Configuraciones
         run: |
+          # 1. Copiar lista de paquetes y repositorios
           cp pacman-legacy.conf builder/archiso/pacman.conf
           cp packages-legacy.txt builder/archiso/packages.x86_64
           
+          # 2. Encender la Pantalla de Login (LightDM) automáticamente
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
           
+          # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
+          # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
+          find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
+          
+          # 4. 💿 INSTALADOR: Crear un icono de instalación en el escritorio de XFCE
+          mkdir -p builder/archiso/airootfs/etc/skel/Desktop
+          cat <<EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Instalar CachyOS Legacy
+          Comment=Instalador del Sistema Calamares
+          Exec=sudo calamares
+          Icon=drive-harddisk
+          Terminal=false
+          Categories=System;
+          EOF
+          # Dar permisos de ejecución al icono
+          chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+  
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
