@@ -8,9 +8,9 @@ on:
         required: true
         default: 'CachyOS-Legacy'
       version_tag:
-        description: 'Versión del lanzamiento (ej. v1.0)'
+        description: 'Versión del lanzamiento (ej. v1.1)'
         required: true
-        default: 'v1.0'
+        default: 'v1.1'
 
 permissions:
   contents: write
@@ -20,30 +20,30 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
-      options: --privileged # Vital para poder montar discos virtuales
+      options: --privileged
 
     steps:
       - name: 📥 1. Descargar nuestros archivos
         uses: actions/checkout@v4
 
-      - name: 🛠️ 2. Preparar el entorno y solucionar llaves GPG
+      - name: 🛠️ 2. Preparar el entorno y blindar repositorios
         run: |
           pacman -Syu --noconfirm
-          # Agregamos grub y dosfstools para que la máquina pueda crear particiones de arranque
           pacman -S --noconfirm git archiso mkinitcpio-archiso sudo base-devel zstd curl wget unzip tar grub dosfstools
           
-          # Inicializar llaves base de Arch Linux
           pacman-key --init
           pacman-key --populate archlinux
           
-          # Descargar instalador de repositorios de CachyOS
           wget https://mirror.cachyos.org/cachyos-repo.tar.xz
           tar xvf cachyos-repo.tar.xz
           cd cachyos-repo
-          
-          # Obligamos al robot a responder "Sí" a todo
           yes | ./cachyos-repo.sh
           cd ..
+          
+          # ¡BARRERA DE SEGURIDAD! Destruimos los repositorios modernos en la máquina de compilación
+          sed -i '/\[cachyos-v3\]/,+2d' /etc/pacman.conf
+          sed -i '/\[cachyos-v4\]/,+2d' /etc/pacman.conf
+          rm -f /etc/pacman.d/cachyos-v*-mirrorlist
 
       - name: 📦 3. Clonar la base de CachyOS
         run: |
@@ -51,18 +51,14 @@ jobs:
 
       - name: 💉 4. Inyectar nuestra configuración Legacy
         run: |
-          # Reemplazamos la configuración de CachyOS por nuestro escudo Legacy
           cp pacman-legacy.conf builder/archiso/pacman.conf
-          # Reemplazamos su lista de paquetes por la nuestra con XFCE y Brave
           cp packages-legacy.txt builder/archiso/packages.x86_64
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
-          # Usamos mkarchiso directamente para esquivar errores
           mkarchiso -v -w work_dir -o out archiso/
           
-          # Renombramos la ISO final usando los datos del formulario interactivo
           cd out
           mv *.iso ../../${{ github.event.inputs.iso_name }}-${{ github.event.inputs.version_tag }}-x86_64.iso
 
@@ -71,7 +67,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version_tag }}
           name: "Lanzamiento ${{ github.event.inputs.iso_name }} ${{ github.event.inputs.version_tag }}"
-          body: "Esta ISO está basada en CachyOS LTS, optimizada para hardware antiguo e incluye XFCE, ZRAM por defecto y Brave Browser."
+          body: "Esta ISO está basada en CachyOS LTS, blindada estrictamente para hardware antiguo (arquitectura x86_64 genérica)."
           files: "*.iso"
           draft: false
           prerelease: false
