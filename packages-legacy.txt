@@ -10,6 +10,7 @@ arch-install-scripts
 # --- LLAVES Y REPOSITORIOS DE CACHYOS ---
 cachyos-keyring
 cachyos-mirrorlist
+cachyos-settings
 
 # --- ARRANQUE E INSTALADOR ---
 grub
