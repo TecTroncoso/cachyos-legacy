@@ -5,6 +5,7 @@ linux-cachyos-lts
 linux-cachyos-lts-headers
 linux-firmware
 mkinitcpio
+mkinitcpio-archiso
 arch-install-scripts
 
 # --- LLAVES Y REPOSITORIOS DE CACHYOS ---
