@@ -19,9 +19,12 @@ calamares
 syslinux
 memtest86+
 memtest86+-efi
+edk2-shell
+archiso
 
 # --- REDES Y MAGIA PARA POCA RAM ---
 networkmanager
+network-manager-applet
 zram-generator
 htop
 nano
@@ -29,9 +32,13 @@ git
 wget
 curl
 
-# --- ENTORNO GRÁFICO (XFCE - Consumo ultra bajo) ---
+# --- ENTORNO GRÁFICO Y DRIVERS (Para PCs Viejas) ---
 xorg-server
 xorg-xinit
+mesa
+xf86-video-intel
+xf86-video-nouveau
+xf86-video-ati
 lightdm
 lightdm-gtk-greeter
 xfce4
