@@ -55,6 +55,8 @@ gvfs
 mousepad
 xfce4-terminal
 xf86-input-libinput
+kimageformats
+polkit-gnome
 
 # --- AUDIO, VIDEO Y NAVEGADOR ---
 pipewire
