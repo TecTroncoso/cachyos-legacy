@@ -63,19 +63,18 @@ jobs:
           # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
           
-          # 4. 💿 INSTALADOR: Crear un icono de instalación en el escritorio de XFCE
+          # 4. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
           cat <<EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           [Desktop Entry]
           Type=Application
           Name=Instalar CachyOS Legacy
-          Comment=Instalador del Sistema Calamares
-          Exec=sudo calamares
+          Comment=Instalador del Sistema
+          Exec=sudo -E calamares
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
           EOF
-          # Dar permisos de ejecución al icono
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
   
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
