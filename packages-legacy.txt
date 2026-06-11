@@ -37,6 +37,8 @@ nano
 git
 wget
 curl
+mkinitcpio-nfs-utils
+nbd
 
 # --- ENTORNO GRÁFICO Y DRIVERS (Para PCs Viejas) ---
 xorg-server
