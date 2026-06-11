@@ -7,6 +7,10 @@ linux-firmware
 mkinitcpio
 mkinitcpio-archiso
 arch-install-scripts
+amd-ucode
+intel-ucode
+ananicy-cpp
+cachyos-ananicy-rules
 
 # --- LLAVES Y REPOSITORIOS DE CACHYOS ---
 cachyos-keyring
