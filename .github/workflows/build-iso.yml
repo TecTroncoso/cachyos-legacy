@@ -68,13 +68,30 @@ jobs:
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
           
           # 4. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
+          mkdir -p builder/archiso/airootfs/usr/local/bin
+          cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+          #!/bin/bash
+          # PARCHE 1: Arreglar la librería faltante de yaml-cpp (engañando al sistema)
+          if [ ! -f /usr/lib/libyaml-cpp.so.0.8 ]; then
+              ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
+          fi
+          
+          # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
+          find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
+          
+          # PARCHE 3: Iniciar Calamares
+          calamares
+          EOF
+          chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+          
+          # Crear icono en el escritorio que ejecuta nuestro script
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
-          cat <<EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+          cat << EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           [Desktop Entry]
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          Exec=sudo -E calamares
+          Exec=sudo -E /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
