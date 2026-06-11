@@ -99,19 +99,23 @@ jobs:
           # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
           find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
           
-          # PARCHE 3: Iniciar Calamares
-          calamares
+          # PARCHE 3: Aislar el DBus para que KPMCore (particiones) no se congele
+          # Destruimos la variable del usuario normal y creamos una sesión pura para Root
+          export DBUS_SESSION_BUS_ADDRESS=""
+          
+          # Iniciar Calamares
+          dbus-launch calamares
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
-          # Crear icono en el escritorio que ejecuta nuestro script
+          # Crear icono en el escritorio que ejecuta nuestro script de forma segura
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
           cat << EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           [Desktop Entry]
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          Exec=sudo -E /usr/local/bin/instalar-cachyos.sh
+          Exec=sh -c "sudo -E /usr/local/bin/instalar-cachyos.sh"
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
