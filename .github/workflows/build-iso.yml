@@ -64,6 +64,10 @@ jobs:
           wget https://archive.archlinux.org/packages/b/boost-libs/boost-libs-1.89.0-4-x86_64.pkg.tar.zst
           # Extraemos únicamente los archivos .so específicos a la versión 1.89.0
           tar -I zstd -xvf boost-libs-1.89.0-4-x86_64.pkg.tar.zst --wildcards 'usr/lib/*.so.1.89.0'
+          
+          # ¡NUEVO! Nos aseguramos de que el directorio de destino exista antes de copiar
+          mkdir -p builder/archiso/airootfs/usr/lib/
+          
           # Copiamos todas las librerías antiguas extraídas al sistema en vivo (airootfs)
           cp -a usr/lib/libboost_*.so.1.89.0 builder/archiso/airootfs/usr/lib/
           # -----------------------------------------------------
