@@ -103,8 +103,8 @@ jobs:
           # Destruimos la variable del usuario normal y creamos una sesión pura para Root
           export DBUS_SESSION_BUS_ADDRESS=""
           
-          # Iniciar Calamares
-          dbus-launch calamares
+          # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
+          dbus-run-session calamares
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
@@ -115,7 +115,7 @@ jobs:
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          Exec=sh -c "sudo -E /usr/local/bin/instalar-cachyos.sh"
+          Exec=sudo -E /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
