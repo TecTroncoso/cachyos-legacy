@@ -54,6 +54,7 @@ xfce4-goodies
 gvfs
 mousepad
 xfce4-terminal
+xf86-input-libinput
 
 # --- AUDIO, VIDEO Y NAVEGADOR ---
 pipewire
