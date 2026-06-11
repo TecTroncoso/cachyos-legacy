@@ -58,6 +58,13 @@ jobs:
           # 1. Copiar lista de paquetes y repositorios
           cp pacman-legacy.conf builder/archiso/pacman.conf
           cp packages-legacy.txt builder/archiso/packages.x86_64
+
+          # 4. 🧰 PARCHE DE LIBRERÍA (yaml-cpp 0.8 para revivir a Calamares)
+          wget https://archive.archlinux.org/packages/y/yaml-cpp/yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst
+          tar -I zstd -xvf yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst usr/lib/libyaml-cpp.so.0.8.0
+          mkdir -p builder/archiso/airootfs/usr/lib/
+          cp usr/lib/libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/
+          ln -sf libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/libyaml-cpp.so.0.8
           
           # 2. Encender la Pantalla de Login (LightDM) automáticamente
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
@@ -66,13 +73,6 @@ jobs:
           # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
           # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
-
-         # 4. 🧰 PARCHE DE LIBRERÍA (yaml-cpp 0.8 para revivir a Calamares)
-          wget https://archive.archlinux.org/packages/y/yaml-cpp/yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst
-          tar -I zstd -xvf yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst usr/lib/libyaml-cpp.so.0.8.0
-          mkdir -p builder/archiso/airootfs/usr/lib/
-          cp usr/lib/libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/
-          ln -sf libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/libyaml-cpp.so.0.8
           
           # 5. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
           mkdir -p builder/archiso/airootfs/usr/local/bin
