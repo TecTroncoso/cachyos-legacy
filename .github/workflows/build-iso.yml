@@ -76,6 +76,10 @@ jobs:
           Categories=System;
           EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+          
+          # ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
+          sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg
+          sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg
   
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
