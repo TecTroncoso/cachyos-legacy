@@ -54,4 +54,4 @@ pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
-firefox
+brave-origin-bin
