@@ -118,7 +118,7 @@ jobs:
           # ¡CORRECCIÓN CLAVE! Usamos pkexec para lanzar el script como root gráficamente
           Exec=pkexec /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
-          Terminal=false
+          Terminal=true
           Categories=System;
           EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
