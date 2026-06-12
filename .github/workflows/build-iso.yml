@@ -115,8 +115,7 @@ jobs:
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          # ¡CORRECCIÓN CLAVE! Usamos pkexec para lanzar el script como root gráficamente
-          Exec=pkexec /usr/local/bin/instalar-cachyos.sh
+          Exec=sudo /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=true
           Categories=System;
