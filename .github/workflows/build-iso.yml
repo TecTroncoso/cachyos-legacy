@@ -115,11 +115,10 @@ jobs:
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          Exec=sudo /usr/local/bin/instalar-cachyos.sh
+          Exec=pkexec /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
-          Terminal=true
+          Terminal=false
           Categories=System;
-          EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
           # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
