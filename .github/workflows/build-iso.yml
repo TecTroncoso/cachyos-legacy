@@ -199,7 +199,20 @@ jobs:
                   destination: ""
                   exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
           EOF
-  
+                  # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/packages.conf
+                backend: pacman
+                skip_if_no_internet: false
+                update_db: false
+                update_system: false
+                
+                operations:
+                  - remove:
+                      - cachyos-calamares
+                      - archiso
+                      - mkinitcpio-archiso
+                      - yaml-cpp
+          EOF
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
