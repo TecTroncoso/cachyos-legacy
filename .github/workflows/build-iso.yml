@@ -45,17 +45,13 @@ jobs:
           sed -i '/\[cachyos-v4\]/,+2d' /etc/pacman.conf
           rm -f /etc/pacman.d/cachyos-v*-mirrorlist
 
-          # Destruimos los repositorios modernos en la máquina de compilación
-          sed -i '/-v[34]\]/,+2d' /etc/pacman.conf
-          rm -f /etc/pacman.d/cachyos-v*-mirrorlist
-
       - name: 📦 3. Clonar la base de CachyOS
         run: |
           git clone https://github.com/CachyOS/CachyOS-Live-ISO.git builder
 
       - name: 💉 4. Inyectar Optimizaciones y Configuraciones
         run: |
-          # 1. Copiar lista de paquetes y repositorios
+          # 1. Copiar lista de paquetes y repositorios (Estos archivos deben estar en tu repo de GitHub)
           cp pacman-legacy.conf builder/archiso/pacman.conf
           cp packages-legacy.txt builder/archiso/packages.x86_64
 
@@ -84,8 +80,9 @@ jobs:
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
           
           # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
-          # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
-          find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
+          # Inyectamos el comando de manera tolerante a fallos por si cambian/eliminan los directorios
+          [ -d builder/archiso/syslinux ] && find builder/archiso/syslinux -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} + || true
+          [ -d builder/archiso/grub ] && find builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} + || true
           
           # 5. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
           mkdir -p builder/archiso/airootfs/usr/local/bin
@@ -124,14 +121,14 @@ jobs:
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
           # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
-          sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg
-          sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg
+          [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
+          [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
 
-          # 6. 🌐 MODO OFFLINE: Forzar a Calamares a instalar sin internet copiando el LiveUSB
-                    mkdir -p builder/archiso/airootfs/etc/calamares/modules
-                    
-                    # A) SETTINGS.CONF (Define la secuencia de instalación, eliminando NetInstall)
-                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/settings.conf
+          # 7. 🌐 MODO OFFLINE: Forzar a Calamares a instalar sin internet copiando el LiveUSB
+          mkdir -p builder/archiso/airootfs/etc/calamares/modules
+          
+          # A) SETTINGS.CONF (Define la secuencia de instalación, eliminando NetInstall)
+          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/settings.conf
           modules-search: [ local ]
           
           sequence:
@@ -177,8 +174,8 @@ jobs:
           quit-at-end: false
           EOF
           
-                    # B) WELCOME.CONF (Quitar la verificación de conexión a internet)
-                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/welcome.conf
+          # B) WELCOME.CONF (Quitar la verificación de conexión a internet)
+          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/welcome.conf
           showSupportUrl:         true
           showKnownIssuesUrl:     true
           showReleaseNotesUrl:    true
@@ -197,27 +194,28 @@ jobs:
                   - root
           EOF
           
-                    # C) UNPACKFS.CONF (Decirle que clone el sistema en vivo tal y como está)
-                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/unpackfs.conf
+          # C) UNPACKFS.CONF (Decirle que clone el sistema en vivo usando "file" como origen)
+          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/unpackfs.conf
           unpack:
               -   source: "/"
-                  sourcefs: "rootfs"
+                  sourcefs: "file"
                   destination: ""
                   exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
           EOF
-                  # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
-                cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/packages.conf
-                backend: pacman
-                skip_if_no_internet: false
-                update_db: false
-                update_system: false
-                
-                operations:
-                  - remove:
-                      - cachyos-calamares
-                      - archiso
-                      - mkinitcpio-archiso
-                      - yaml-cpp
+          
+          # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
+          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/packages.conf
+          backend: pacman
+          skip_if_no_internet: false
+          update_db: false
+          update_system: false
+          
+          operations:
+            - remove:
+                - cachyos-calamares
+                - archiso
+                - mkinitcpio-archiso
+                - yaml-cpp
           EOF
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
