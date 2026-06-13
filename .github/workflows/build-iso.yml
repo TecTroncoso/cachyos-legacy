@@ -115,6 +115,7 @@ jobs:
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
+          EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
           # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
