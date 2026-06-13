@@ -84,6 +84,7 @@ jobs:
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
           
           # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
+          # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
           
           # 5. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
@@ -105,12 +106,12 @@ jobs:
                    
           # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
           exec dbus-run-session -- calamares
-EOF
+          EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
           # Crear icono en el escritorio que ejecuta nuestro script de forma segura
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
-          cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+          cat << EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           [Desktop Entry]
           Type=Application
           Name=Instalar CachyOS Legacy
@@ -119,7 +120,7 @@ EOF
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
-EOF
+          EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
           # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
@@ -127,10 +128,10 @@ EOF
           sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg
 
           # 6. 🌐 MODO OFFLINE: Forzar a Calamares a instalar sin internet copiando el LiveUSB
-          mkdir -p builder/archiso/airootfs/etc/calamares/modules
-          
-          # A) SETTINGS.CONF (Define la secuencia de instalación, eliminando NetInstall)
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/settings.conf
+                    mkdir -p builder/archiso/airootfs/etc/calamares/modules
+                    
+                    # A) SETTINGS.CONF (Define la secuencia de instalación, eliminando NetInstall)
+                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/settings.conf
           modules-search: [ local ]
           
           sequence:
@@ -174,10 +175,10 @@ EOF
           disable-cancel-during-exec: false
           hide-back-and-next-during-exec: false
           quit-at-end: false
-EOF
+          EOF
           
-          # B) WELCOME.CONF (Quitar la verificación de conexión a internet)
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/welcome.conf
+                    # B) WELCOME.CONF (Quitar la verificación de conexión a internet)
+                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/welcome.conf
           showSupportUrl:         true
           showKnownIssuesUrl:     true
           showReleaseNotesUrl:    true
@@ -194,31 +195,30 @@ EOF
                   - storage
                   - ram
                   - root
-EOF
+          EOF
           
-          # C) UNPACKFS.CONF (Decirle que clone el sistema en vivo tal y como está)
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/unpackfs.conf
+                    # C) UNPACKFS.CONF (Decirle que clone el sistema en vivo tal y como está)
+                    cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/unpackfs.conf
           unpack:
               -   source: "/"
                   sourcefs: "rootfs"
                   destination: ""
                   exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
-EOF
-
-          # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/packages.conf
-          backend: pacman
-          skip_if_no_internet: false
-          update_db: false
-          update_system: false
-          
-          operations:
-            - remove:
-                - cachyos-calamares
-                - archiso
-                - mkinitcpio-archiso
-                - yaml-cpp
-EOF
+          EOF
+                  # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares/modules/packages.conf
+                backend: pacman
+                skip_if_no_internet: false
+                update_db: false
+                update_system: false
+                
+                operations:
+                  - remove:
+                      - cachyos-calamares
+                      - archiso
+                      - mkinitcpio-archiso
+                      - yaml-cpp
+          EOF
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
