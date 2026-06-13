@@ -98,11 +98,7 @@ jobs:
           
           # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
           find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
-          
-          # PARCHE 3: Aislar el DBus para que KPMCore (particiones) no se congele
-          # Destruimos la variable del usuario normal y creamos una sesión pura para Root
-          export DBUS_SESSION_BUS_ADDRESS=""
-          
+                   
           # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
           dbus-run-session calamares
           EOF
