@@ -64,3 +64,19 @@ pipewire-pulse
 pipewire-alsa
 wireplumber
 brave-origin-bin
+
+# --- INSTALADOR Y PERMISOS ---
+polkit
+dbus
+sudo
+
+# --- HERRAMIENTAS DE PARTICIONES (KPMCore) ---
+parted
+gptfdisk
+e2fsprogs
+dosfstools
+ntfs-3g
+exfatprogs
+btrfs-progs
+xfsprogs
+util-linux
