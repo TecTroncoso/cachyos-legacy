@@ -100,7 +100,7 @@ jobs:
           find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
                    
           # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
-          dbus-run-session calamares
+          exec dbus-run-session -- calamares
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
