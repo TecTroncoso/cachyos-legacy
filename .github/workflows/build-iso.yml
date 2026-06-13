@@ -160,6 +160,7 @@ jobs:
               - networkcfg
               - hwclock
               - services-systemd
+              - packages
               - grubcfg
               - bootloader
               - umount
