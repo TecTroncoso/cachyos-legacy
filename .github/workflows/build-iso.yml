@@ -111,7 +111,7 @@ jobs:
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema
-          Exec=pkexec /usr/local/bin/instalar-cachyos.sh
+          Exec=sudo -E /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
