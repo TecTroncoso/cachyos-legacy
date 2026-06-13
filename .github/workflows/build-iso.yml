@@ -98,6 +98,11 @@ jobs:
           
           # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
           find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
+
+          # PARCHE 3: Forzar Renderizado por Software (Soluciona pantalla en blanco)
+          export QT_QUICK_BACKEND=software
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export QSG_RENDER_LOOP=basic
                    
           # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
           exec dbus-run-session -- calamares
@@ -213,6 +218,7 @@ jobs:
                       - mkinitcpio-archiso
                       - yaml-cpp
           EOF
+
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
