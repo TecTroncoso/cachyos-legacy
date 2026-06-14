@@ -54,17 +54,6 @@ jobs:
           cp pacman-legacy.conf builder/archiso/pacman.conf
           cp packages-legacy.txt builder/archiso/packages.x86_64
 
-          # 4.5 🧰 PARCHE DE BOOST (boost-libs 1.89.0 para revivir a Calamares Legacy)
-          wget https://archive.archlinux.org/packages/b/boost-libs/boost-libs-1.89.0-4-x86_64.pkg.tar.zst
-          tar -I zstd -xvf boost-libs-1.89.0-4-x86_64.pkg.tar.zst --wildcards 'usr/lib/*.so.1.89.0'
-          mkdir -p builder/archiso/airootfs/usr/lib/
-          cp -a usr/lib/libboost_*.so.1.89.0 builder/archiso/airootfs/usr/lib/
-          
-          # 4. 🧰 PARCHE DE LIBRERÍA (yaml-cpp 0.8 para revivir a Calamares)
-          wget https://archive.archlinux.org/packages/y/yaml-cpp/yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst
-          tar -I zstd -xvf yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst usr/lib/libyaml-cpp.so.0.8.0
-          cp usr/lib/libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/
-          ln -sf libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/libyaml-cpp.so.0.8
           
           # 2. Encender la Pantalla de Login (LightDM) automáticamente
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
@@ -74,15 +63,19 @@ jobs:
           [ -d builder/archiso/syslinux ] && find builder/archiso/syslinux -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} + || true
           [ -d builder/archiso/grub ] && find builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} + || true
           
-          # 5. 💿 INSTALADOR: Script de inicio de Calamares
-          mkdir -p builder/archiso/airootfs/usr/local/bin
-          cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
-          #!/bin/bash
-          # PARCHE 1: Arreglar la librería faltante de yaml-cpp (engañando al sistema)
-          if [ ! -f /usr/lib/libyaml-cpp.so.0.8 ]; then
-              ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
-          fi
-          
+          # 5. 💿 INSTALADOR: Crear icono en el escritorio para lanzar Archinstall
+                 mkdir -p builder/archiso/airootfs/etc/skel/Desktop
+                 cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+                 [Desktop Entry]
+                 Type=Application
+                 Name=Instalar CachyOS (Archinstall)
+                 Comment=Instalador oficial ligero
+                 Exec=xfce4-terminal -e "sudo archinstall"
+                 Icon=utilities-terminal
+                 Terminal=false
+                 Categories=System;
+                 EOF
+                 chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
           find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
 
@@ -117,99 +110,7 @@ jobs:
           [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
           [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
 
-          # 7. 🌐 MODO OFFLINE SEGURO: Creamos los archivos en una ruta secreta (/etc/calamares-offline)
-          mkdir -p builder/archiso/airootfs/etc/calamares-offline/modules
-          
-          # A) SETTINGS.CONF
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-offline/settings.conf
-          modules-search: [ local ]
-          
-          sequence:
-            - show:
-              - welcome
-              - locale
-              - keyboard
-              - partition
-              - users
-              - summary
-            - exec:
-              - partition
-              - mount
-              - unpackfs
-              - machineid
-              - fstab
-              - locale
-              - keyboard
-              - localecfg
-              - luksbootkeyfile
-              - luksopenswaphookcfg
-              - initcpiocfg
-              - initcpio
-              - users
-              - displaymanager
-              - networkcfg
-              - hwclock
-              - services-systemd
-              - packages
-              - grubcfg
-              - bootloader
-              - umount
-            - show:
-              - finished
-          
-          branding: cachyos
-          prompt-install: true
-          dont-chroot: false
-          oem-setup: false
-          disable-cancel: false
-          disable-cancel-during-exec: false
-          hide-back-and-next-during-exec: false
-          quit-at-end: false
-          EOF
-          
-          # B) WELCOME.CONF
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-offline/modules/welcome.conf
-          showSupportUrl:         true
-          showKnownIssuesUrl:     true
-          showReleaseNotesUrl:    true
-          
-          requirements:
-              requiredStorage:    6.0
-              requiredRam:        1.0
-              check:
-                  - storage
-                  - ram
-                  - power
-                  - root
-              required:
-                  - storage
-                  - ram
-                  - root
-          EOF
-          
-          # C) UNPACKFS.CONF
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-offline/modules/unpackfs.conf
-          unpack:
-              -   source: "/"
-                  sourcefs: "file"
-                  destination: ""
-                  exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
-          EOF
-          
-          # D) PACKAGES.CONF
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-offline/modules/packages.conf
-          backend: pacman
-          skip_if_no_internet: false
-          update_db: false
-          update_system: false
-          
-          operations:
-            - remove:
-                - cachyos-calamares
-                - archiso
-                - mkinitcpio-archiso
-                - yaml-cpp
-          EOF
+
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
