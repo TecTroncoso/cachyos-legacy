@@ -138,7 +138,7 @@ jobs:
             - show:
               - finished
           
-          branding: default
+          branding: cachyos
           prompt-install: true
           dont-chroot: false
           oem-setup: false
@@ -186,7 +186,7 @@ jobs:
           
           operations:
             - remove:
-                - calamares
+                - cachyos-calamares 
                 - archiso
                 - mkinitcpio-archiso
           EOF
