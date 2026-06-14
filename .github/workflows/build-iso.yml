@@ -64,25 +64,22 @@ jobs:
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
           
           # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
-          # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
           
           # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
           mkdir -p builder/archiso/airootfs/usr/local/bin
           cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           #!/bin/bash
-          # 1. ¡INYECCIÓN OFFLINE! Copiamos nuestra configuración ciega justo antes de abrir
           sudo cp -rf /etc/calamares-custom/* /etc/calamares/
           
-          # 2. Forzar Renderizado por Software (Soluciona pantalla en blanco en PCs muy viejas)
           export QT_QUICK_BACKEND=software
           export LIBGL_ALWAYS_SOFTWARE=1
           export QSG_RENDER_LOOP=basic
                    
-          # 3. Iniciar Calamares genérico con permisos de administrador
           exec sudo -E dbus-run-session -- calamares -d
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+          
           # Crear icono en el escritorio
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
           cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
@@ -90,21 +87,20 @@ jobs:
           Type=Application
           Name=Instalar CachyOS Legacy
           Comment=Instalador del Sistema Offline
-          Exec=/usr/local/bin/instalar-cachyos.sh
+          Exec=bash /usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
           EOF
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
-          # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
+          # 6. ¡ARREGLO DE GRUB!
           [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
           [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
 
-          # 7. 🌐 MODO OFFLINE: Guardamos nuestros archivos en una carpeta secreta temporal
+          # 7. 🌐 MODO OFFLINE: Guardamos archivos
           mkdir -p builder/archiso/airootfs/etc/calamares-custom/modules
                     
-          # A) SETTINGS.CONF (Define la secuencia de instalación, eliminando NetInstall)
           cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/settings.conf
           modules-search: [ local ]
           
@@ -148,7 +144,6 @@ jobs:
           quit-at-end: false
           EOF
           
-          # B) WELCOME.CONF (Quitar la verificación de conexión a internet)
           cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/welcome.conf
           showSupportUrl:         true
           showKnownIssuesUrl:     true
@@ -168,7 +163,6 @@ jobs:
                   - root
           EOF
           
-          # C) UNPACKFS.CONF (Decirle que clone el sistema en vivo tal y como está)
           cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/unpackfs.conf
           unpack:
               -   source: "/"
@@ -177,7 +171,6 @@ jobs:
                   exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
           EOF
           
-          # D) PACKAGES.CONF (Para que el instalador se borre del disco duro al finalizar)
           cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/packages.conf
           backend: pacman
           skip_if_no_internet: true
@@ -190,6 +183,12 @@ jobs:
                 - archiso
                 - mkinitcpio-archiso
           EOF
+          
+          # 8. ¡CORRECCIÓN DE PERMISOS PARA MKARCHISO!
+          # Inyectamos los permisos de ejecución para la ISO final para que ya no lance el "Permission Denied"
+          echo 'file_permissions+=("/usr/local/bin/instalar-cachyos.sh"="0:0:755")' >> builder/archiso/profiledef.sh
+          echo 'file_permissions+=("/etc/skel/Desktop/Instalar_CachyOS.desktop"="0:0:755")' >> builder/archiso/profiledef.sh
+
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
           cd builder
