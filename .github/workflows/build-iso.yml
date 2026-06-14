@@ -67,24 +67,16 @@ jobs:
           # Inyectamos el comando en los archivos de arranque del LiveUSB (Syslinux y Grub)
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
           
-          # 5. 💿 INSTALADOR: Crear icono con el FIX de permisos nativo de Linux
+          # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
           mkdir -p builder/archiso/airootfs/usr/local/bin
           cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           #!/bin/bash
-          # PARCHE 1: Arreglar la librería faltante de yaml-cpp (engañando al sistema)
-          if [ ! -f /usr/lib/libyaml-cpp.so.0.8 ]; then
-              ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
-          fi
-          
-          # PARCHE 2: Forzar a Calamares a instalar el kernel LTS en lugar del normal
-          find /etc/calamares /usr/share/calamares -type f -exec sed -i 's/linux-cachyos/linux-cachyos-lts/g' {} + 2>/dev/null
-
-          # PARCHE 3: Forzar Renderizado por Software (Soluciona pantalla en blanco)
+          # Forzar Renderizado por Software (Soluciona pantalla en blanco en PCs muy viejas)
           export QT_QUICK_BACKEND=software
           export LIBGL_ALWAYS_SOFTWARE=1
           export QSG_RENDER_LOOP=basic
                    
-          # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
+          # Iniciar Calamares genérico con permisos de administrador
           exec sudo -E dbus-run-session -- calamares -d
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
