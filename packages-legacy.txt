@@ -21,7 +21,7 @@ cachyos-settings
 grub
 efibootmgr
 os-prober
-extra/calamares
+cachyos-calamares
 syslinux
 memtest86+
 memtest86+-efi
