@@ -147,7 +147,7 @@ jobs:
             - show:
               - finished
           
-          branding: cachyos
+          branding: default
           prompt-install: true
           dont-chroot: false
           oem-setup: false
@@ -194,10 +194,9 @@ jobs:
                 
                 operations:
                   - remove:
-                      - cachyos-calamares
+                      - calamares
                       - archiso
                       - mkinitcpio-archiso
-                      - yaml-cpp
           EOF
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
