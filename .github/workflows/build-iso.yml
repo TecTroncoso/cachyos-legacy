@@ -109,14 +109,14 @@ jobs:
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
-          # Crear icono en el escritorio que ejecuta nuestro script de forma segura
+          # Crear icono en el escritorio
           mkdir -p builder/archiso/airootfs/etc/skel/Desktop
-          cat << EOF > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+          cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           [Desktop Entry]
           Type=Application
           Name=Instalar CachyOS Legacy
-          Comment=Instalador del Sistema
-          Exec=sudo -E /usr/local/bin/instalar-cachyos.sh
+          Comment=Instalador del Sistema Offline
+          Exec=/usr/local/bin/instalar-cachyos.sh
           Icon=drive-harddisk
           Terminal=false
           Categories=System;
