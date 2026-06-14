@@ -22,6 +22,9 @@ grub
 efibootmgr
 os-prober
 cachyos-calamares
+yaml-cpp
+kpmcore
+squashfs-tools
 syslinux
 memtest86+
 memtest86+-efi
