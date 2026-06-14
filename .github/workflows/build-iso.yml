@@ -58,26 +58,6 @@ jobs:
           # 1. Copiar lista de paquetes y repositorios
           cp pacman-legacy.conf builder/archiso/pacman.conf
           cp packages-legacy.txt builder/archiso/packages.x86_64
-
-          # ---> 🟢 NUEVO PARCHE: SOLUCIÓN AL ERROR DE BOOST <---
-          # 4.5 🧰 PARCHE DE BOOST (boost-libs 1.89.0 para revivir a Calamares Legacy)
-          wget https://archive.archlinux.org/packages/b/boost-libs/boost-libs-1.89.0-4-x86_64.pkg.tar.zst
-          # Extraemos únicamente los archivos .so específicos a la versión 1.89.0
-          tar -I zstd -xvf boost-libs-1.89.0-4-x86_64.pkg.tar.zst --wildcards 'usr/lib/*.so.1.89.0'
-          
-          # ¡NUEVO! Nos aseguramos de que el directorio de destino exista antes de copiar
-          mkdir -p builder/archiso/airootfs/usr/lib/
-          
-          # Copiamos todas las librerías antiguas extraídas al sistema en vivo (airootfs)
-          cp -a usr/lib/libboost_*.so.1.89.0 builder/archiso/airootfs/usr/lib/
-          # -----------------------------------------------------
-
-          # 4. 🧰 PARCHE DE LIBRERÍA (yaml-cpp 0.8 para revivir a Calamares)
-          wget https://archive.archlinux.org/packages/y/yaml-cpp/yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst
-          tar -I zstd -xvf yaml-cpp-0.8.0-1-x86_64.pkg.tar.zst usr/lib/libyaml-cpp.so.0.8.0
-          mkdir -p builder/archiso/airootfs/usr/lib/
-          cp usr/lib/libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/
-          ln -sf libyaml-cpp.so.0.8.0 builder/archiso/airootfs/usr/lib/libyaml-cpp.so.0.8
           
           # 2. Encender la Pantalla de Login (LightDM) automáticamente
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
@@ -105,7 +85,7 @@ jobs:
           export QSG_RENDER_LOOP=basic
                    
           # Iniciar Calamares usando la herramienta nativa de sesión (dbus-run-session)
-          exec dbus-run-session -- calamares
+          exec sudo -E dbus-run-session -- calamares -d
           EOF
           chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           
@@ -124,8 +104,8 @@ jobs:
           chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
           
           # 6. ¡ARREGLO DE GRUB! Forzamos a que la entrada por defecto use el kernel LTS
-          sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg
-          sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg
+                    [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
+                    [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
 
           # 6. 🌐 MODO OFFLINE: Forzar a Calamares a instalar sin internet copiando el LiveUSB
                     mkdir -p builder/archiso/airootfs/etc/calamares/modules
