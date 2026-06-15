@@ -71,12 +71,6 @@ jobs:
           # 3. 🚀 OPTIMIZACIÓN EXTREMA DE KERNEL: mitigations=off y nowatchdog
           # Quitamos parches de seguridad de CPU para ganar rendimiento, y quitamos el reloj de chequeo
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off nowatchdog/g' {} +
-          
-          # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
-          mkdir -p builder/archiso/airootfs/usr/local/bin
-          cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
-          #!/bin/bash
-          sudo cp -rf /etc/calamares-custom/* /etc/calamares/
 
           # 4. 🚀 INTELIGENCIA DE DISCOS (HDD vs SSD) Y ZRAM
           mkdir -p builder/archiso/airootfs/etc/sysctl.d/
@@ -96,6 +90,12 @@ jobs:
           # Si es SSD o NVMe (no rotacional), usamos mq-deadline para máxima tasa de transferencia
           ACTION=="add|change", KERNEL=="sd[a-z]|nvme[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
           EOF
+          
+          # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
+          mkdir -p builder/archiso/airootfs/usr/local/bin
+          cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+          #!/bin/bash
+          sudo cp -rf /etc/calamares-custom/* /etc/calamares/
 
           # 🛠️ PARCHES SALVAVIDAS: Engañamos a Calamares con las versiones
           sudo ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
