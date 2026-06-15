@@ -62,7 +62,12 @@ jobs:
           # 2. Encender la Pantalla de Login (LightDM) automáticamente
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
-          
+          # 🚀 ACTIVAMOS IRQBALANCE Y EARLYOOM
+          ln -sf /usr/lib/systemd/system/irqbalance.service builder/archiso/airootfs/etc/systemd/system/multi-user.target.wants/irqbalance.service
+
+          # 🚀 ACTIVAR MANTENIMIENTO INTELIGENTE DE SSD (fstrim)
+          ln -sf /usr/lib/systemd/system/fstrim.timer builder/archiso/airootfs/etc/systemd/system/timers.target.wants/fstrim.timer
+                   
           # 3. 🚀 OPTIMIZACIÓN EXTREMA DE KERNEL: mitigations=off y nowatchdog
           # Quitamos parches de seguridad de CPU para ganar rendimiento, y quitamos el reloj de chequeo
           find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off nowatchdog/g' {} +
@@ -73,16 +78,25 @@ jobs:
           #!/bin/bash
           sudo cp -rf /etc/calamares-custom/* /etc/calamares/
 
-          # 6. 🚀 TWEAKS PARA DISCOS VIEJOS Y ZRAM
+          # 4. 🚀 INTELIGENCIA DE DISCOS (HDD vs SSD) Y ZRAM
           mkdir -p builder/archiso/airootfs/etc/sysctl.d/
+          mkdir -p builder/archiso/airootfs/etc/udev/rules.d/
+          
+          # Prioridad de memoria y redes
           cat << 'EOF' > builder/archiso/airootfs/etc/sysctl.d/99-legacy-perf.conf
-          # Forzar a Linux a usar la compresión de RAM (ZRAM) antes que el disco duro
           vm.swappiness = 100
           vm.vfs_cache_pressure = 50
-          # Hacer que la red y el sistema respondan un poco más rápido
           net.ipv4.tcp_fastopen = 3
           EOF
           
+          # Regla inteligente: ¿Es HDD o SSD?
+          cat << 'EOF' > builder/archiso/airootfs/etc/udev/rules.d/60-ioschedulers.rules
+          # Si es HDD (rotacional), usamos BFQ para que el escritorio no se trabe al copiar archivos
+          ACTION=="add|change", KERNEL=="sd[a-z]|sr[0-9]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
+          # Si es SSD o NVMe (no rotacional), usamos mq-deadline para máxima tasa de transferencia
+          ACTION=="add|change", KERNEL=="sd[a-z]|nvme[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+          EOF
+
           # 🛠️ PARCHES SALVAVIDAS: Engañamos a Calamares con las versiones
           sudo ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
           
