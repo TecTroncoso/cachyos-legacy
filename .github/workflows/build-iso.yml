@@ -54,140 +54,142 @@ jobs:
           git clone https://github.com/CachyOS/CachyOS-Live-ISO.git builder
 
       - name: 💉 4. Inyectar Optimizaciones y Configuraciones
-        run: |
-          # 1. Copiar lista de paquetes y repositorios
-          cp pacman-legacy.conf builder/archiso/pacman.conf
-          cp packages-legacy.txt builder/archiso/packages.x86_64
-          
-          # 2. Encender la Pantalla de Login (LightDM) automáticamente
-          mkdir -p builder/archiso/airootfs/etc/systemd/system/
-          ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
-          
-          # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
-          find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
-          
-          # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
-          mkdir -p builder/archiso/airootfs/usr/local/bin
-          cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
-          #!/bin/bash
-          sudo cp -rf /etc/calamares-custom/* /etc/calamares/
-          
-          export QT_QUICK_BACKEND=software
-          export LIBGL_ALWAYS_SOFTWARE=1
-          export QSG_RENDER_LOOP=basic
-                   
-          exec sudo -E dbus-run-session -- calamares -d
-          EOF
-          chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
-          
-          # Crear icono en el escritorio
-          mkdir -p builder/archiso/airootfs/etc/skel/Desktop
-          cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
-          [Desktop Entry]
-          Type=Application
-          Name=Instalar CachyOS Legacy
-          Comment=Instalador del Sistema Offline
-          Exec=bash /usr/local/bin/instalar-cachyos.sh
-          Icon=drive-harddisk
-          Terminal=false
-          Categories=System;
-          EOF
-          chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
-          
-          # 6. ¡ARREGLO DE GRUB!
-          [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
-          [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
-
-          # 7. 🌐 MODO OFFLINE: Guardamos archivos
-          mkdir -p builder/archiso/airootfs/etc/calamares-custom/modules
-                    
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/settings.conf
-          modules-search: [ local ]
-          
-          sequence:
-            - show:
-              - welcome
-              - locale
-              - keyboard
-              - partition
-              - users
-              - summary
-            - exec:
-              - partition
-              - mount
-              - unpackfs
-              - machineid
-              - fstab
-              - locale
-              - keyboard
-              - localecfg
-              - initcpiocfg
-              - initcpio
-              - users
-              - displaymanager
-              - hwclock
-              - services-systemd
-              - packages
-              - grubcfg
-              - bootloader
-              - umount
-            - show:
-              - finished
-          
-          branding: cachyos
-          prompt-install: true
-          dont-chroot: false
-          oem-setup: false
-          disable-cancel: false
-          disable-cancel-during-exec: false
-          hide-back-and-next-during-exec: false
-          quit-at-end: false
-          EOF
-          
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/welcome.conf
-          showSupportUrl:         true
-          showKnownIssuesUrl:     true
-          showReleaseNotesUrl:    true
-          
-          requirements:
-              requiredStorage:    6.0
-              requiredRam:        1.0
-              check:
-                  - storage
-                  - ram
-                  - power
-                  - root
-              required:
-                  - storage
-                  - ram
-                  - root
-          EOF
-          
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/unpackfs.conf
-          unpack:
-              -   source: "/"
-                  sourcefs: "rootfs"
-                  destination: ""
-                  exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
-          EOF
-          
-          cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/packages.conf
-          backend: pacman
-          skip_if_no_internet: true
-          update_db: false
-          update_system: false
-          
-          operations:
-            - remove:
-                - cachyos-calamares 
-                - archiso
-                - mkinitcpio-archiso
-          EOF
-          
-          # 8. ¡CORRECCIÓN DE PERMISOS PARA MKARCHISO!
-          # Inyectamos los permisos de ejecución para la ISO final para que ya no lance el "Permission Denied"
-          echo 'file_permissions+=("/usr/local/bin/instalar-cachyos.sh"="0:0:755")' >> builder/archiso/profiledef.sh
-          echo 'file_permissions+=("/etc/skel/Desktop/Instalar_CachyOS.desktop"="0:0:755")' >> builder/archiso/profiledef.sh
+              run: |
+                # 1. Copiar lista de paquetes y repositorios
+                cp pacman-legacy.conf builder/archiso/pacman.conf
+                cp packages-legacy.txt builder/archiso/packages.x86_64
+                
+                # 2. Encender la Pantalla de Login (LightDM) automáticamente
+                mkdir -p builder/archiso/airootfs/etc/systemd/system/
+                ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
+                
+                # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
+                find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
+                
+                # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
+                mkdir -p builder/archiso/airootfs/usr/local/bin
+                cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+                #!/bin/bash
+                sudo cp -rf /etc/calamares-custom/* /etc/calamares/
+                
+                # 🛠️ PARCHE SALVAVIDAS: Engañamos a Calamares para que use la versión nueva de libyaml
+                sudo ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
+                
+                export QT_QUICK_BACKEND=software
+                export LIBGL_ALWAYS_SOFTWARE=1
+                export QSG_RENDER_LOOP=basic
+                         
+                exec sudo -E dbus-run-session -- calamares -d
+                EOF
+                chmod +x builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
+                
+                # Crear icono en el escritorio
+                mkdir -p builder/archiso/airootfs/etc/skel/Desktop
+                cat << 'EOF' > builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+                [Desktop Entry]
+                Type=Application
+                Name=Instalar CachyOS Legacy
+                Comment=Instalador del Sistema Offline
+                Exec=bash /usr/local/bin/instalar-cachyos.sh
+                Icon=drive-harddisk
+                Terminal=false
+                Categories=System;
+                EOF
+                chmod +x builder/archiso/airootfs/etc/skel/Desktop/Instalar_CachyOS.desktop
+                
+                # 6. ¡ARREGLO DE GRUB!
+                [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/vmlinuz-linux-cachyos/vmlinuz-linux-cachyos-lts/g' builder/archiso/grub/grub.cfg || true
+                [ -f builder/archiso/grub/grub.cfg ] && sed -i 's/initramfs-linux-cachyos\.img/initramfs-linux-cachyos-lts.img/g' builder/archiso/grub/grub.cfg || true
+      
+                # 7. 🌐 MODO OFFLINE: Guardamos archivos
+                mkdir -p builder/archiso/airootfs/etc/calamares-custom/modules
+                          
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/settings.conf
+                modules-search: [ local ]
+                
+                sequence:
+                  - show:
+                    - welcome
+                    - locale
+                    - keyboard
+                    - partition
+                    - users
+                    - summary
+                  - exec:
+                    - partition
+                    - mount
+                    - unpackfs
+                    - machineid
+                    - fstab
+                    - locale
+                    - keyboard
+                    - localecfg
+                    - initcpiocfg
+                    - initcpio
+                    - users
+                    - displaymanager
+                    - hwclock
+                    - services-systemd
+                    - packages
+                    - grubcfg
+                    - bootloader
+                    - umount
+                  - show:
+                    - finished
+                
+                branding: cachyos
+                prompt-install: true
+                dont-chroot: false
+                oem-setup: false
+                disable-cancel: false
+                disable-cancel-during-exec: false
+                hide-back-and-next-during-exec: false
+                quit-at-end: false
+                EOF
+                
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/welcome.conf
+                showSupportUrl:         true
+                showKnownIssuesUrl:     true
+                showReleaseNotesUrl:    true
+                
+                requirements:
+                    requiredStorage:    6.0
+                    requiredRam:        1.0
+                    check:
+                        - storage
+                        - ram
+                        - power
+                        - root
+                    required:
+                        - storage
+                        - ram
+                        - root
+                EOF
+                
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/unpackfs.conf
+                unpack:
+                    -   source: "/"
+                        sourcefs: "rootfs"
+                        destination: ""
+                        exclude: [ "/sys", "/proc", "/dev", "/run", "/tmp", "/mnt", "/etc/resolv.conf", "/etc/fstab", "/etc/mtab" ]
+                EOF
+                
+                cat << 'EOF' > builder/archiso/airootfs/etc/calamares-custom/modules/packages.conf
+                backend: pacman
+                skip_if_no_internet: true
+                update_db: false
+                update_system: false
+                
+                operations:
+                  - remove:
+                      - cachyos-calamares 
+                      - archiso
+                      - mkinitcpio-archiso
+                EOF
+                
+                # 8. ¡CORRECCIÓN DE PERMISOS PARA MKARCHISO!
+                echo 'file_permissions+=("/usr/local/bin/instalar-cachyos.sh"="0:0:755")' >> builder/archiso/profiledef.sh
+                echo 'file_permissions+=("/etc/skel/Desktop/Instalar_CachyOS.desktop"="0:0:755")' >> builder/archiso/profiledef.sh
 
       - name: ⚙️ 5. Compilar la ISO (Tardará unos 20 min)
         run: |
