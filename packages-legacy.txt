@@ -1,14 +1,15 @@
 # --- CEREBRO Y MOTOR (Optimizados para hardware antiguo) ---
 base
-base-devel
 linux-cachyos-lts
-linux-cachyos-lts-headers
 linux-firmware
 mkinitcpio
 mkinitcpio-archiso
 arch-install-scripts
 amd-ucode
 intel-ucode
+
+# --- OPTIMIZACIONES DE CACHYOS (¡No tocar!) ---
+# Ananicy se encarga de dar prioridad de CPU a las ventanas activas
 ananicy-cpp
 cachyos-ananicy-rules
 
@@ -28,22 +29,17 @@ yaml-cpp
 kpmcore
 squashfs-tools
 syslinux
-memtest86+
-memtest86+-efi
-edk2-shell
 archiso
 
 # --- REDES Y MAGIA PARA POCA RAM ---
 networkmanager
 network-manager-applet
+# ZRAM comprime los datos en la memoria RAM para que no se sature. Oro puro en PCs viejos.
 zram-generator
 htop
 nano
-git
 wget
 curl
-mkinitcpio-nfs-utils
-nbd
 
 # --- ENTORNO GRÁFICO Y DRIVERS (Para PCs Viejas) ---
 xorg-server
@@ -68,6 +64,7 @@ pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
+# Nota: Brave es excelente, pero si notas que consume mucha RAM en PCs muy limitados, puedes cambiarlo por 'firefox'
 brave-origin-bin
 
 # --- INSTALADOR Y PERMISOS ---
@@ -75,13 +72,11 @@ polkit
 dbus
 sudo
 
-# --- HERRAMIENTAS DE PARTICIONES (KPMCore) ---
+# --- HERRAMIENTAS DE PARTICIONES ---
 parted
 gptfdisk
 e2fsprogs
 dosfstools
 ntfs-3g
-exfatprogs
 btrfs-progs
-xfsprogs
 util-linux
