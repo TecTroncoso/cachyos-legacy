@@ -83,3 +83,4 @@ dosfstools
 ntfs-3g
 btrfs-progs
 util-linux
+xfsprogs
