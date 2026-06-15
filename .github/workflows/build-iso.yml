@@ -66,6 +66,7 @@ jobs:
           ln -sf /usr/lib/systemd/system/irqbalance.service builder/archiso/airootfs/etc/systemd/system/multi-user.target.wants/irqbalance.service
 
           # 🚀 ACTIVAR MANTENIMIENTO INTELIGENTE DE SSD (fstrim)
+          mkdir -p builder/archiso/airootfs/etc/systemd/system/timers.target.wants/
           ln -sf /usr/lib/systemd/system/fstrim.timer builder/archiso/airootfs/etc/systemd/system/timers.target.wants/fstrim.timer
                    
           # 3. 🚀 OPTIMIZACIÓN EXTREMA DE KERNEL: mitigations=off y nowatchdog
