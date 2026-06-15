@@ -42,6 +42,7 @@ htop
 nano
 wget
 curl
+irqbalance
 
 # --- ENTORNO GRÁFICO Y DRIVERS (Para PCs Viejas) ---
 xorg-server
