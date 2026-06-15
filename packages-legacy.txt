@@ -22,6 +22,8 @@ grub
 efibootmgr
 os-prober
 cachyos-calamares
+boost-libs
+python
 yaml-cpp
 kpmcore
 squashfs-tools
