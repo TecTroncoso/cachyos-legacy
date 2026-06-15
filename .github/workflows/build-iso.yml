@@ -54,7 +54,7 @@ jobs:
           git clone https://github.com/CachyOS/CachyOS-Live-ISO.git builder
 
       - name: 💉 4. Inyectar Optimizaciones y Configuraciones
-              run: |
+        run: |
                 # 1. Copiar lista de paquetes y repositorios
                 cp pacman-legacy.conf builder/archiso/pacman.conf
                 cp packages-legacy.txt builder/archiso/packages.x86_64
