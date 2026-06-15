@@ -63,14 +63,25 @@ jobs:
           mkdir -p builder/archiso/airootfs/etc/systemd/system/
           ln -sf /usr/lib/systemd/system/lightdm.service builder/archiso/airootfs/etc/systemd/system/display-manager.service
           
-          # 3. 🚀 OPTIMIZACIÓN EXTREMA: mitigations=off
-          find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off/g' {} +
+          # 3. 🚀 OPTIMIZACIÓN EXTREMA DE KERNEL: mitigations=off y nowatchdog
+          # Quitamos parches de seguridad de CPU para ganar rendimiento, y quitamos el reloj de chequeo
+          find builder/archiso/syslinux builder/archiso/grub -type f -exec sed -i 's/quiet/quiet mitigations=off nowatchdog/g' {} +
           
           # 5. 💿 SCRIPT DE CALAMARES PARA HARDWARE ANTIGUO
           mkdir -p builder/archiso/airootfs/usr/local/bin
           cat << 'EOF' > builder/archiso/airootfs/usr/local/bin/instalar-cachyos.sh
           #!/bin/bash
           sudo cp -rf /etc/calamares-custom/* /etc/calamares/
+
+          # 6. 🚀 TWEAKS PARA DISCOS VIEJOS Y ZRAM
+          mkdir -p builder/archiso/airootfs/etc/sysctl.d/
+          cat << 'EOF' > builder/archiso/airootfs/etc/sysctl.d/99-legacy-perf.conf
+          # Forzar a Linux a usar la compresión de RAM (ZRAM) antes que el disco duro
+          vm.swappiness = 100
+          vm.vfs_cache_pressure = 50
+          # Hacer que la red y el sistema respondan un poco más rápido
+          net.ipv4.tcp_fastopen = 3
+          EOF
           
           # 🛠️ PARCHES SALVAVIDAS: Engañamos a Calamares con las versiones
           sudo ln -sf /usr/lib/libyaml-cpp.so /usr/lib/libyaml-cpp.so.0.8
